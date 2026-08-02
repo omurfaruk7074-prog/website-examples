@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Screen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:wght@100..900&family=Fira+Code:wght@300..700&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
+    <style type="text/tailwindcss">
+      @import "tailwindcss";
+      @theme inline {
+        --color-background: var(--background);
+        --color-foreground: var(--foreground);
+        --color-primary: var(--primary);
+        --color-primary-foreground: var(--primary-foreground);
+        --color-secondary: var(--secondary);
+        --color-secondary-foreground: var(--secondary-foreground);
+        --color-tertiary: var(--tertiary);
+        --color-tertiary-foreground: var(--tertiary-foreground);
+        --color-muted: var(--muted);
+        --color-muted-foreground: var(--muted-foreground);
+        --color-accent: var(--accent);
+        --color-accent-foreground: var(--accent-foreground);
+        --color-destructive: var(--destructive);
+        --color-destructive-foreground: var(--destructive-foreground);
+        --color-card: var(--card);
+        --color-card-foreground: var(--card-foreground);
+        --color-popover: var(--popover);
+        --color-popover-foreground: var(--popover-foreground);
+        --color-border: var(--border);
+        --color-input: var(--input);
+        --color-ring: var(--ring);
+        --radius-sm: calc(var(--radius) - 4px);
+        --radius-md: calc(var(--radius) - 2px);
+        --radius-lg: var(--radius);
+        --font-family-sans: var(--font-sans);
+        --font-family-heading: var(--font-heading);
+        --font-family-mono: var(--font-mono);
+        /* Tailwind v4's font namespace is --font-*, NOT --font-family-*.
+         *
+         * Without this line the font-heading utility does not exist at all,
+         * so every h1–h6 the design prompt mandates (font-heading) silently
+         * inherited the body's font-sans. A user could set --font-heading a
+         * dozen times, watch the tool report success, and never see the
+         * typeface change — the "font applied but not reflected" report.
+         *
+         * font-sans and font-mono are Tailwind built-ins and already read
+         * :root, which is why only headings were broken. The fallback chain
+         * keeps themes that never set a heading font rendering the body face
+         * instead of nothing. */
+        --font-heading: var(--font-heading, var(--font-sans, ui-sans-serif, system-ui, sans-serif));
+      }
+
+      /* Every filled surface carries its own text colour.
+       *
+       * Without this, <div class="bg-accent"> inherits --foreground from
+       * <html> — a colour chosen to contrast the PAGE, not the accent fill. On
+       * a dark theme with a bright accent that renders near-white text on
+       * near-white (or near-black on near-black): the invisible text users
+       * report. Pairing each fill with its own foreground makes the readable
+       * result the default instead of something the model has to remember.
+       *
+       * These sit in @layer base deliberately. Any explicit text-* utility is
+       * in @layer utilities and therefore still wins, so an intentional colour
+       * choice is never overridden. The neutral surfaces (background, muted)
+       * are left out: --foreground is already guaranteed readable on those, and
+       * forcing --muted-foreground would wash out headings in muted panels.
+       */
+      @layer base {
+        .bg-card { color: var(--card-foreground); }
+        .bg-popover { color: var(--popover-foreground, var(--card-foreground)); }
+        .bg-primary { color: var(--primary-foreground); }
+        .bg-secondary { color: var(--secondary-foreground); }
+        .bg-accent { color: var(--accent-foreground, var(--foreground)); }
+        .bg-tertiary { color: var(--tertiary-foreground, var(--primary-foreground)); }
+        .bg-destructive { color: var(--destructive-foreground, var(--primary-foreground)); }
+      }
+      :root {
+        --background: #ffffff;
+        --foreground: #181d1e;
+        --primary: #18a8e2;
+        --primary-foreground: #111111;
+        --secondary: #f1f1f2;
+        --secondary-foreground: #181d1e;
+        --tertiary: #181d1e;
+        --muted: #f1f1f2;
+        --muted-foreground: #6C6E6F;
+        --accent: #181d1e;
+        --destructive: #ef4444;
+        --card: #f6f6f6;
+        --card-foreground: #181d1e;
+        --border: #6c6c6c;
+        --input: #6c6c6c;
+        --ring: #18a8e2;
+        --radius: 4px;
+        --font-sans: Inter, sans-serif;
+        --font-heading: Inter, sans-serif;
+        --font-mono: JetBrains Mono, monospace;
+        --shadow-offset-x: 0;
+        --shadow-offset-y: 10;
+        --shadow-blur: 30;
+        --shadow-spread: -8;
+        --shadow-color: rgba(15, 23, 42, 0.12);
+        --accent-foreground: #7E8586;
+        --tertiary-foreground: #7E8586;
+        --destructive-foreground: #181D1E;
+        --primary-text: #0078B0;
+        --secondary-text: #717172;
+        --tertiary-text: #181D1E;
+        --accent-text: #181D1E;
+        --destructive-text: #D82B31;
+        }
+    </style>
+    <style>
+      .brand-gradient { background-image: linear-gradient(135deg, var(--primary), var(--accent)); }
+      .shadow-theme {
+        box-shadow:
+          calc(var(--shadow-offset-x, 0) * 1px) calc(var(--shadow-offset-y, 10) * 1px)
+          calc(var(--shadow-blur, 30) * 1px) calc(var(--shadow-spread, -8) * 1px)
+          var(--shadow-color, rgba(15, 23, 42, 0.12));
+      }
+
+      /* Brand colours used as TEXT resolve to a legibility-adjusted variant.
+       *
+       * --primary and friends are tuned to look right as FILLS; painted as text
+       * on the page they are routinely too light — a #16A34A "+8.4%" on a white
+       * card measures 3.3:1. The --*-text tokens are the same hue and chroma
+       * with lightness nudged just far enough to clear AA on the page and card
+       * surfaces, so fills keep the exact brand colour while text becomes
+       * readable.
+       *
+       * This block is intentionally UNLAYERED: unlayered declarations outrank
+       * every cascade layer, so these beat Tailwind's own text-* utilities. The
+       * var() fallbacks leave documents that predate the derived tokens
+       * rendering exactly as before.
+       */
+      .text-primary { color: var(--primary-text, var(--primary)); }
+      .text-secondary { color: var(--secondary-text, var(--secondary)); }
+      .text-tertiary { color: var(--tertiary-text, var(--tertiary)); }
+      .text-accent { color: var(--accent-text, var(--accent)); }
+      .text-destructive { color: var(--destructive-text, var(--destructive)); }
+    </style>
+  <link id="theme-fonts" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+  <body>
+<div class="min-h-screen w-full bg-background flex flex-col relative">
+<section class="h-26 bg-background text-primary-foreground">
+  <div class="mx-auto flex h-full max-w-6xl items-center justify-between px-12">
+    <div class="site-logo shrink-0">
+      <img class="header-image is-logo-image w-14" alt="Betting sites in Bangladesh" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/logomediafoot.svg" data-skip-lazy="true">
+    </div>
+
+    <nav class="main-navigation mobile-menu-control-wrapper hidden" id="mobile-menu-control-wrapper" aria-label="Mobile Toggle">
+      <div class="menu-bar-items">
+        <span class="menu-bar-item">
+          <a href="#" role="button" aria-label="Open search" data-gpmodal-trigger="gp-search">
+            <span class="gp-icon icon-search">
+              <iconify-icon icon="lucide:search"></iconify-icon>
+            </span>
+          </a>
+        </span>
+      </div>
+      <button data-nav="site-navigation" class="menu-toggle">
+        <span class="gp-icon icon-menu-bars">
+          <iconify-icon icon="lucide:menu"></iconify-icon>
+        </span>
+        <span class="screen-reader-text sr-only">Menu</span>
+      </button>
+    </nav>
+
+    <nav class="main-navigation has-menu-bar-items sub-menu-right" id="site-navigation" aria-label="Primary">
+      <div class="inside-navigation grid-container flex items-center gap-14">
+        <button class="menu-toggle hidden">
+          <span class="gp-icon icon-menu-bars">
+            <iconify-icon icon="lucide:menu"></iconify-icon>
+          </span>
+          <span class="screen-reader-text sr-only">Menu</span>
+        </button>
+
+        <div id="primary-menu" class="main-nav">
+          <ul id="menu-menu" class="menu sf-menu flex items-center gap-10 text-sm">
+            <li id="menu-item-20" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home current-menu-item page_item page-item-2 current_page_item menu-item-has-children menu-item-20 relative">
+              <a class="flex items-center gap-2 text-foreground" href="https://mediafoot.net/bd/">Betting sites<span role="presentation" class="dropdown-menu-toggle"><span class="gp-icon icon-arrow"><iconify-icon class="text-base" icon="lucide:chevron-down"></iconify-icon></span></span></a>
+              <ul class="sub-menu hidden" id="menu-item-20-sub-menu">
+                <li id="menu-item-106" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-106"><a href="https://mediafoot.net/bd/betting-sites/linebet/">Linebet</a></li>
+                <li id="menu-item-121" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-121"><a href="https://mediafoot.net/bd/betting-sites/melbet/">Melbet</a></li>
+                <li id="menu-item-141" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-141"><a href="https://mediafoot.net/bd/betting-sites/dbbet/">DBbet</a></li>
+              </ul>
+            </li>
+            <li id="menu-item-112" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-112 relative">
+              <a class="flex items-center gap-2" href="#">Promo Codes<span role="presentation" class="dropdown-menu-toggle"><span class="gp-icon icon-arrow"><iconify-icon class="text-base" icon="lucide:chevron-down"></iconify-icon></span></span></a>
+              <ul class="sub-menu hidden" id="menu-item-112-sub-menu">
+                <li id="menu-item-113" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-113"><a href="https://mediafoot.net/bd/betting-sites/linebet/promo-code/">Linebet Promo Code</a></li>
+                <li id="menu-item-130" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-130"><a href="https://mediafoot.net/bd/betting-sites/melbet/promo-code/">Melbet Promo Code</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+
+        <div class="menu-bar-items">
+          <span class="menu-bar-item">
+            <a class="flex items-center" href="#" role="button" aria-label="Open search" data-gpmodal-trigger="gp-search">
+              <span class="gp-icon icon-search">
+                <iconify-icon class="text-xl" icon="lucide:search"></iconify-icon>
+              </span>
+            </a>
+          </span>
+        </div>
+      </div>
+    </nav>
+  </div>
+</section>
+<section class="bg-background px-5 py-10 text-foreground">
+  <div class="mx-auto max-w-6xl">
+    <p class="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">Bangladesh betting guide · August 2026</p>
+    <h1 class="entry-title max-w-4xl text-2xl font-heading font-bold leading-tight md:text-4xl">Top 10 Betting Sites in Bangladesh – Online Platforms Ranked</h1>
+    <p class="mt-5 max-w-3xl text-base leading-7 text-muted-foreground">Compare established online betting platforms, welcome offers, payment options, and cricket coverage before choosing where to play.</p>
+  </div>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p>Top 10 betting sites in Bangladesh include trusted platforms like 1xBet, Melbet, Linebet, and DBbet. They are popular among Bangladeshi players for solid bonuses, good odds, and easy access to cricket betting, the country’s most followed and wagered sport.</p>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h2 class="m-0 text-[32px] font-normal leading-[42px]">Best Betting Sites in August 2026</h2>
+</section>
+<section class="bg-card text-primary-foreground">
+  <div class="mx-auto flex h-40 max-w-6xl items-center px-5">
+    <div class="flex w-full items-center">
+      <div class="flex w-[364px] shrink-0 items-center gap-4">
+        <div class="relative shrink-0">
+          <img src="https://mediafoot.net/wp-content/uploads/2025/09/1xbet.webp" alt="1xbet" class="h-[120px] w-[120px] rounded object-cover">
+          <span class="absolute left-0 top-0 flex h-4 w-4 items-center justify-center bg-card text-[11px] leading-none text-card-foreground">1</span>
+        </div>
+        <div class="flex flex-col justify-center">
+          <div class="mb-1 text-[11px] font-medium uppercase text-card-foreground">top 1</div>
+          <p class="mb-2 text-lg font-medium leading-none text-primary-foreground">1xbet</p>
+          <div class="flex gap-1 text-sm leading-none text-primary">
+            <span class="text-card-foreground">★</span><span class="text-card-foreground">★</span><span class="text-card-foreground">★</span><span class="text-card-foreground">★</span><span class="text-card-foreground">★</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-1 items-center justify-between gap-8">
+        <div class="text-[15px] text-primary-foreground">Boost up to 12,000 BDT</div>
+        <div class="space-y-2 text-sm text-muted-foreground">
+          <div class="flex items-center gap-2">
+            <span class="text-card-foreground">✓</span>
+            <span class="text-card-foreground">International Bookmaker</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-card-foreground">✓</span>
+            <span class="text-card-foreground">Esports Leader</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-card-foreground">✓</span>
+            <span class="text-card-foreground">Live streaming</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ml-10 flex w-[120px] shrink-0 flex-col gap-1.5">
+        <div class="flex h-12 items-center justify-center border border-dashed border-primary-foreground text-sm text-primary-foreground">
+          <span class="promo-code">MFTOP</span>
+          <button type="button" aria-label="Copy promo code" class="ml-1 inline-flex h-5 w-5 items-center justify-center text-muted-foreground">
+            <iconify-icon icon="lucide:copy" class="text-sm"></iconify-icon>
+          </button>
+        </div>
+        <button type="button" class="h-10 bg-primary text-sm font-medium uppercase text-primary-foreground">Visit site</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="bg-card text-primary-foreground h-40 w-full">
+  <div class="mx-auto flex h-full max-w-7xl items-center px-5">
+    <div class="flex w-[368px] items-center gap-5">
+      <div class="relative flex h-[120px] w-[120px] items-center justify-center rounded-sm bg-background">
+        <img src="https://mediafoot.net/wp-content/uploads/2025/09/melbet.webp" alt="Melbet" class="w-[108px] object-contain">
+        <span class="absolute left-1 top-0 text-xs text-foreground">2</span>
+      </div>
+      <div class="flex flex-col justify-center">
+        <div class="mb-1 text-[11px] uppercase text-card-foreground">top 2</div>
+        <p class="mb-2 text-lg leading-none text-primary-foreground">Melbet</p>
+        <div class="flex gap-0.5 text-base leading-none text-primary">
+          <span class="text-card-foreground">★</span><span class="text-card-foreground">★</span><span class="text-card-foreground">★</span><span class="text-card-foreground">★</span><span class="text-card-foreground">★</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-1 items-center">
+      <div class="w-[300px] text-sm text-primary-foreground">Bonus up to 12,000 BDT</div>
+      <div class="space-y-2 text-sm text-muted-foreground">
+        <div class="flex items-center gap-2">
+          <span class="text-card-foreground">✓</span>
+          <span class="text-card-foreground">Top casino bonus</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-card-foreground">✓</span>
+          <span class="text-card-foreground">Quick cash-out feature</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-card-foreground">✓</span>
+          <span class="text-card-foreground">Multi+</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex w-[120px] flex-col gap-1.5">
+      <div class="flex h-12 items-center justify-center border border-dashed border-primary bg-background">
+        <span class="text-sm text-primary-foreground">VIPMF</span>
+        <button type="button" aria-label="Copy promo code" class="ml-1 hidden text-muted-foreground">
+          <iconify-icon icon="lucide:copy" class="text-sm"></iconify-icon>
+        </button>
+      </div>
+      <button type="button" class="h-10 bg-primary text-sm uppercase text-primary-foreground">visit site</button>
+    </div>
+  </div>
+</section>
+<section class="bg-card text-primary-foreground py-5">
+  <div class="mx-auto flex h-[120px] max-w-[1080px] items-center">
+    <div class="flex w-[344px] items-center">
+      <div class="relative h-[120px] w-[120px] shrink-0 overflow-hidden rounded-sm">
+        <img src="https://mediafoot.net/wp-content/uploads/2025/09/linebet.webp" alt="Linebet" class="h-full w-full object-cover">
+        <span class="absolute left-0 top-0 flex h-4 w-4 items-center justify-center bg-card text-[11px] text-primary-foreground">3</span>
+      </div>
+      <div class="ml-5">
+        <div class="mb-2 text-[10px] font-medium uppercase leading-none text-card-foreground">top 3</div>
+        <p class="mb-2 text-[18px] leading-none text-primary-foreground">Linebet</p>
+        <div class="flex gap-1 text-sm leading-none text-amber-400">
+          <span>★</span>
+          <span>★</span>
+          <span>★</span>
+          <span>★</span>
+          <span class="text-card-foreground">★</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-1 items-center">
+      <div class="w-[300px] text-sm text-primary-foreground">Bonus up to 14,689,81 BDT</div>
+      <div class="space-y-2 text-sm text-muted-foreground">
+        <div class="flex items-center gap-2"><span class="text-card-foreground">✓</span><span class="text-card-foreground">Instant Bonus</span></div>
+        <div class="flex items-center gap-2"><span class="text-card-foreground">✓</span><span class="text-card-foreground">Weekly cashback offers</span></div>
+        <div class="flex items-center gap-2"><span class="text-card-foreground">✓</span><span class="text-card-foreground">Fast deposits and withdrawals</span></div>
+      </div>
+    </div>
+
+    <div class="w-[120px]">
+      <div class="flex h-12 items-center justify-center rounded border border-dashed border-primary bg-card text-sm text-primary-foreground">
+        <span class="promo-code">LINMF</span>
+        <button class="sr-only btn btn-primary" aria-label="Copy promo code">
+          <iconify-icon icon="lucide:copy"></iconify-icon>
+        </button>
+      </div>
+      <button class="cta-button mt-1.5 h-10 w-full bg-primary text-sm font-medium uppercase text-primary-foreground">visit site</button>
+    </div>
+  </div>
+</section>
+<section class="cdc-coupon-block bg-card text-primary-foreground py-5">
+  <div class="coupon-content mx-auto flex h-30 w-full max-w-7xl items-center gap-5 px-5">
+    <div class="left-section flex w-86 shrink-0 items-center gap-4">
+      <div class="operator-logo-wrapper">
+        <div class="operator-logo relative h-30 w-30 overflow-hidden rounded-sm bg-muted">
+          <img src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/05/dbbet.webp" alt="DBbet " class="h-full w-full object-contain">
+          <span data-layout="pos:absolute" class="absolute left-0 top-0 flex h-4 w-3.5 items-center justify-center bg-card text-[11px] leading-none text-primary-foreground">4</span>
+        </div>
+      </div>
+      <div class="operator-info self-center">
+        <p class="operator-name text-xl leading-none text-primary-foreground">DBbet</p>
+        <div class="stars mt-3 flex gap-0.5 text-primary">
+          <span class="star filled text-base leading-none text-card-foreground">★</span>
+          <span class="star filled text-base leading-none text-card-foreground">★</span>
+          <span class="star filled text-base leading-none text-card-foreground">★</span>
+          <span class="star filled text-base leading-none text-card-foreground">★</span>
+          <span class="star filled text-base leading-none text-card-foreground">★</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="middle-section flex flex-1 items-center justify-between">
+      <div class="offer-text text-sm text-card-foreground">100% up to ~15,036 BDT</div>
+      <div class="pros-list w-72 space-y-1.5 text-sm text-muted-foreground">
+        <div class="pro-item flex items-center gap-2">
+          <span class="pro-bullet text-card-foreground">✓</span>
+          <span class="pro-text text-card-foreground">Top casino bonus</span>
+        </div>
+        <div class="pro-item flex items-center gap-2">
+          <span class="pro-bullet text-card-foreground">✓</span>
+          <span class="pro-text text-card-foreground">Quick cash-out feature</span>
+        </div>
+        <div class="pro-item flex items-center gap-2">
+          <span class="pro-bullet text-card-foreground">✓</span>
+          <span class="pro-text text-card-foreground">Multi+</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-section w-30 shrink-0">
+      <div class="promo-code-wrapper">
+        <div data-layout="text-align:center; display:flex; wrap:nowrap; justify:center; align:center" class="flex items-center justify-center">
+          <span class="promo-code flex h-12 w-30 items-center justify-center rounded border border-dashed border-border text-sm text-primary-foreground">DBMF</span>
+          <button class="btn btn-primary hidden" aria-label="Copy promo code">
+            <iconify-icon icon="lucide:copy"></iconify-icon>
+          </button>
+        </div>
+        <button class="cta-button mt-1.5 h-10 w-30 bg-primary text-sm font-medium uppercase text-primary-foreground">visit site</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="bg-card py-5 text-primary-foreground">
+  <div class="mx-auto w-full max-w-6xl px-5">
+    <div class="flex h-30 items-center">
+      <div class="flex w-80 items-center gap-4">
+        <div class="relative h-30 w-30 shrink-0">
+          <img src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/mostbet.webp" alt="Mostbet" class="h-full w-full rounded object-cover">
+          <span data-layout="pos:absolute" class="absolute -top-0 left-0 flex h-4 w-3 items-center justify-center bg-card text-xs text-card-foreground">5</span>
+        </div>
+        <div>
+          <p class="text-xl leading-6 text-card-foreground">Mostbet</p>
+          <div class="mt-2 flex text-primary">
+            <span class="star filled text-lg leading-none text-card-foreground">★</span>
+            <span class="star filled text-lg leading-none text-card-foreground">★</span>
+            <span class="star filled text-lg leading-none text-card-foreground">★</span>
+            <span class="star filled text-lg leading-none text-card-foreground">★</span>
+            <span class="star empty text-lg leading-none text-card-foreground">★</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid flex-1 grid-cols-2 items-center">
+        <div class="pl-9 text-sm text-card-foreground">Bonus up to 25,000 BDT</div>
+        <div class="space-y-1 text-sm leading-6 text-muted-foreground">
+          <div class="flex items-center gap-2"><span class="pro-bullet text-card-foreground">✓</span><span class="pro-text text-card-foreground">VIP loyalty rewards program</span></div>
+          <div class="flex items-center gap-2"><span class="pro-bullet text-card-foreground">✓</span><span class="pro-text text-card-foreground">Live streaming</span></div>
+          <div class="flex items-center gap-2"><span class="pro-bullet text-card-foreground">✓</span><span class="pro-text text-card-foreground">C24/7 customer support</span></div>
+        </div>
+      </div>
+
+      <div class="w-30">
+        <button class="h-11 w-30 bg-primary text-sm uppercase text-primary-foreground">visit site</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="bg-card text-primary-foreground py-5">
+  <div class="mx-auto flex h-[120px] w-full max-w-[1080px] items-center">
+    <div class="left-section flex w-[340px] items-center">
+      <div class="operator-logo-wrapper">
+        <div class="operator-logo relative h-[120px] w-[120px]">
+          <img src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/paripesa.webp" alt="Paripesa" class="h-full w-full rounded-sm object-cover">
+          <span data-layout="pos:absolute" class="absolute left-0 top-0 flex h-4 w-3 items-center justify-center bg-card text-[11px] leading-none text-card-foreground">6</span>
+        </div>
+      </div>
+      <div class="operator-info ml-4">
+        <p class="operator-name text-lg leading-none text-primary-foreground">Paripesa</p>
+        <div class="stars mt-3 flex gap-0.5 text-primary">
+          <span class="star filled text-lg leading-none text-card-foreground">★</span>
+          <span class="star filled text-lg leading-none text-card-foreground">★</span>
+          <span class="star filled text-lg leading-none text-card-foreground">★</span>
+          <span class="star filled text-lg leading-none text-card-foreground">★</span>
+          <span class="star empty text-lg leading-none text-card-foreground">★</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="middle-section flex flex-1 items-center">
+      <div class="offer-text w-[295px] text-sm text-primary-foreground">Bonus up to 14 670,77 BDT</div>
+      <div class="pros-list space-y-2 text-sm text-muted-foreground">
+        <div class="pro-item flex items-center gap-2">
+          <span class="pro-bullet text-card-foreground">✓</span>
+          <span class="pro-text text-card-foreground">Frequent promotional campaigns</span>
+        </div>
+        <div class="pro-item flex items-center gap-2">
+          <span class="pro-bullet text-card-foreground">✓</span>
+          <span class="pro-text text-card-foreground">Cash-out option for live bets</span>
+        </div>
+        <div class="pro-item flex items-center gap-2">
+          <span class="pro-bullet text-card-foreground">✓</span>
+          <span class="pro-text text-card-foreground">Multiple deposit methods</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-section ml-6 w-[120px]">
+      <div class="promo-code-wrapper">
+        <div data-layout="text-align:center; display:flex; wrap:nowrap; justify:center; align:center" class="flex h-12 items-center justify-center rounded border border-border bg-card">
+          <span class="promo-code text-sm text-primary-foreground">PARIMF</span>
+          <button class="btn btn-primary ml-1 inline-flex h-5 w-5 items-center justify-center text-primary" aria-label="Copy promo code">
+            <iconify-icon icon="lucide:copy" class="text-xs"></iconify-icon>
+          </button>
+        </div>
+        <button class="cta-button mt-1.5 h-10 w-full bg-primary text-sm font-medium uppercase text-primary-foreground">visit site</button>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="bg-card px-5 py-5 text-primary-foreground">
+  <div class="mx-auto flex h-[120px] w-full max-w-[1120px] items-center">
+    <div class="left-section flex w-[320px] shrink-0 items-center gap-4">
+      <div class="operator-logo-wrapper h-[120px] w-[120px] shrink-0">
+        <div class="operator-logo relative h-full w-full overflow-hidden rounded-sm bg-background">
+          <img src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/jeetbuzz.webp" alt="Jeetbuzz" class="h-full w-full object-contain">
+          <span data-layout="pos:absolute" class="absolute left-1 top-0 text-xs text-foreground">7</span>
+        </div>
+      </div>
+      <div class="operator-info">
+        <p class="operator-name mb-2 text-lg text-card-foreground">Jeetbuzz</p>
+        <div class="stars flex gap-1 text-primary">
+          <span class="star filled text-card-foreground">★</span>
+          <span class="star filled text-card-foreground">★</span>
+          <span class="star filled text-card-foreground">★</span>
+          <span class="star filled text-card-foreground">★</span>
+          <span class="star empty opacity-40 text-card-foreground">★</span>
+        </div>
+      </div>
+    </div>
+    <div class="middle-section flex flex-1 items-center">
+      <div class="offer-text w-[265px] shrink-0 text-sm text-card-foreground">Bonus up to 7,777 BDT</div>
+      <div class="pros-list space-y-2 text-sm text-muted-foreground">
+        <div class="pro-item flex items-center gap-2">
+          <span class="pro-bullet text-card-foreground">✓</span>
+          <span class="pro-text text-card-foreground">Simple and beginner-friendly interface</span>
+        </div>
+        <div class="pro-item flex items-center gap-2">
+          <span class="pro-bullet text-card-foreground">✓</span>
+          <span class="pro-text text-card-foreground">Fast account verification</span>
+        </div>
+        <div class="pro-item flex items-center gap-2">
+          <span class="pro-bullet text-card-foreground">✓</span>
+          <span class="pro-text text-card-foreground">Cashback</span>
+        </div>
+      </div>
+    </div>
+    <div class="right-section ml-5 shrink-0">
+      <button class="cta-button h-11 w-[120px] bg-primary text-sm uppercase text-primary-foreground">visit site</button>
+    </div>
+  </div>
+</section>
+<section class="cdc-coupon-block h-40 bg-card text-primary-foreground py-5">
+  <div class="coupon-content mx-auto grid h-[120px] max-w-[1120px] grid-cols-[319px_1fr_120px] items-center gap-5 px-5">
+    <div class="left-section flex items-center">
+      <div class="operator-logo-wrapper">
+        <div class="operator-logo relative h-[120px] w-[120px] overflow-hidden rounded-sm">
+          <img src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/bcgame.webp" alt="BCGame" class="h-full w-full object-cover">
+          <span data-layout="pos:absolute" class="absolute left-0 top-0 flex h-4 w-3 items-center justify-center rounded-br-sm bg-card text-[11px] leading-none text-card-foreground">8</span>
+        </div>
+      </div>
+      <div class="operator-info ml-4">
+        <p class="operator-name text-lg font-normal text-card-foreground">BCGame</p>
+        <div class="stars mt-2 flex gap-1 text-sm leading-none text-primary">
+          <span class="star filled text-card-foreground">★</span>
+          <span class="star filled text-card-foreground">★</span>
+          <span class="star filled text-card-foreground">★</span>
+          <span class="star filled text-card-foreground">★</span>
+          <span class="star empty text-card-foreground">★</span>
+        </div>
+      </div>
+    </div>
+    <div class="middle-section flex items-center">
+      <div class="offer-text w-[255px] text-sm text-card-foreground">Bonus up to 20,000 $</div>
+      <div class="pros-list space-y-2 text-sm text-muted-foreground">
+        <div class="pro-item flex items-center">
+          <span class="pro-bullet mr-2 text-card-foreground">✓</span>
+          <span class="pro-text text-card-foreground">Crypto betting and casino platform</span>
+        </div>
+        <div class="pro-item flex items-center">
+          <span class="pro-bullet mr-2 text-card-foreground">✓</span>
+          <span class="pro-text text-card-foreground">Provably fair games technology</span>
+        </div>
+        <div class="pro-item flex items-center">
+          <span class="pro-bullet mr-2 text-card-foreground">✓</span>
+          <span class="pro-text text-card-foreground">Instant crypto deposits and withdrawals</span>
+        </div>
+      </div>
+    </div>
+    <div class="right-section flex justify-end">
+      <button class="cta-button h-11 w-[120px] bg-primary text-sm font-normal uppercase text-primary-foreground">visit site</button>
+    </div>
+  </div>
+</section>
+<section class="h-40 bg-card text-primary-foreground">
+  <div class="mx-auto flex h-full max-w-7xl items-center px-5">
+    <div class="flex w-[330px] shrink-0 items-center gap-4">
+      <div class="relative h-[120px] w-[120px] shrink-0">
+        <img src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/betvisa.webp" alt="Betvisa" class="h-[120px] w-[120px] rounded object-cover">
+        <span class="absolute left-0 top-0 flex h-4 w-3 items-center justify-center rounded-br bg-background text-[11px] font-medium text-foreground">9</span>
+      </div>
+      <div class="flex flex-col justify-center">
+        <p class="text-xl font-normal text-card-foreground">Betvisa</p>
+        <div class="mt-2 flex text-primary">
+          <span class="text-lg leading-none text-card-foreground">★</span>
+          <span class="text-lg leading-none text-card-foreground">★</span>
+          <span class="text-lg leading-none text-card-foreground">★</span>
+          <span class="text-lg leading-none text-card-foreground">★</span>
+          <span class="text-lg leading-none text-card-foreground">★</span>
+        </div>
+      </div>
+    </div>
+    <div class="grid flex-1 grid-cols-[282px_1fr] items-center">
+      <div class="text-sm text-card-foreground">Bonus up to 20,000 BDT</div>
+      <div class="space-y-2 text-sm text-muted-foreground">
+        <div class="flex items-center gap-2">
+          <span class="text-card-foreground">✓</span>
+          <span class="text-card-foreground">Live betting across many sports</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-card-foreground">✓</span>
+          <span class="text-card-foreground">Mobile-friendly platform</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-card-foreground">✓</span>
+          <span class="text-card-foreground">Secure payment system</span>
+        </div>
+      </div>
+    </div>
+    <div class="ml-5 flex w-[128px] shrink-0 justify-end">
+      <button class="h-11 w-[120px] bg-primary text-sm font-medium uppercase text-primary-foreground">visit site</button>
+    </div>
+  </div>
+</section>
+<section class="bg-card text-primary-foreground">
+  <div class="mx-auto flex h-40 w-full max-w-6xl items-center px-5 py-5">
+    <div class="flex w-80 shrink-0 items-center gap-4">
+      <div class="relative h-30 w-30 shrink-0">
+        <img src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/krikya.webp" alt="Krikya" class="h-full w-full rounded object-cover">
+        <span class="absolute left-0 top-0 flex h-4 w-5 items-center justify-center bg-card text-[10px] text-primary-foreground">10</span>
+      </div>
+      <div class="self-center">
+        <p class="mb-2 text-lg leading-none">Krikya</p>
+        <div class="flex gap-0.5 text-base leading-none text-primary">
+          <span class="text-card-foreground">★</span><span class="text-card-foreground">★</span><span class="text-card-foreground">★</span><span class="text-card-foreground">★</span><span class="text-card-foreground">★</span>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-1 items-center">
+      <div class="w-72 text-sm">Bonus up to 34,000 BDT</div>
+      <div class="space-y-2 text-sm text-muted-foreground">
+        <div class="flex items-center gap-2"><span class="text-card-foreground">✓</span><span class="text-card-foreground">High betting limits available</span></div>
+        <div class="flex items-center gap-2"><span class="text-card-foreground">✓</span><span class="text-card-foreground">Regular reload bonuses</span></div>
+        <div class="flex items-center gap-2"><span class="text-card-foreground">✓</span><span class="text-card-foreground">Cashback</span></div>
+      </div>
+    </div>
+    <div class="ml-6 shrink-0">
+      <button class="h-11 w-31 bg-primary text-sm uppercase text-primary-foreground">visit site</button>
+    </div>
+  </div>
+</section>
+<section class="h-[160px] border-b border-border bg-card px-5 py-5 text-primary-foreground">
+  <div class="mx-auto flex h-full max-w-6xl items-center">
+    <div class="flex w-[338px] shrink-0 items-center gap-4">
+      <div class="relative h-[120px] w-[120px] shrink-0">
+        <img src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/babu88.webp" alt="Babu88" class="h-[120px] w-[120px] rounded object-cover">
+        <span class="absolute -left-1 -top-1 bg-card px-1 text-xs leading-4 text-primary-foreground">11</span>
+      </div>
+      <div>
+        <p class="mb-3 text-lg leading-none text-primary-foreground">Babu88</p>
+        <div class="flex gap-1 text-base leading-none text-primary">
+          <span class="text-card-foreground">★</span><span class="text-card-foreground">★</span><span class="text-card-foreground">★</span><span class="text-card-foreground">★</span><span class="text-card-foreground">★</span>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-1 items-center gap-20">
+      <div class="whitespace-nowrap text-sm text-primary-foreground">Bonus up to 18,000 BDT</div>
+      <div class="space-y-2 text-sm leading-none text-muted-foreground">
+        <div class="flex items-center gap-2"><span class="text-card-foreground">✓</span><span class="text-card-foreground">Simple registration and quick access</span></div>
+        <div class="flex items-center gap-2"><span class="text-card-foreground">✓</span><span class="text-card-foreground">Fast deposit processing</span></div>
+        <div class="flex items-center gap-2"><span class="text-card-foreground">✓</span><span class="text-card-foreground">Local payment support</span></div>
+      </div>
+    </div>
+    <div class="ml-8 shrink-0">
+      <button class="h-11 w-[120px] bg-primary text-sm uppercase text-primary-foreground">visit site</button>
+    </div>
+  </div>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h3 class="wp-block-heading text-2xl font-bold leading-9">Betting sites in Bangladesh: TOP 10</h3>
+</section>
+<section class="bg-background text-primary-foreground w-full p-0"><p class="m-0 text-base leading-7">Based on our analysis, we have created a ranking of the best betting sites in Bangladesh for 2026. Key factors for this list include welcome bonuses, promotional campaigns, loyalty programs, and user-friendly platforms.</p></section>
+<section class="bg-background text-primary-foreground">
+  <ol class="m-0 list-none p-0 text-base leading-relaxed">
+    <li>1xBet:Handles high-volume IPL/BPL live bets without lag</li>
+    <li>Melbet:Offers the best Bangladesh Premier League odds</li>
+    <li>Linebet:Welcome bonus credited instantly for quick start</li>
+    <li>DBbet: Best odds, beginner-friendly</li>
+    <li>Mostbet:Mobile interface stays stable during live cricket</li>
+    <li>Paripesa:Promotions tied to cricket leagues</li>
+    <li>Jeetbuzz:Supports bKash, Rocket, and Nagad reliably</li>
+    <li>BC Game:Lightning-fast crypto withdrawals for bettors</li>
+    <li>Betvisa:Instant payouts, even on small cricket bets</li>
+    <li>Krikya:Cricket-only platform with accurate domestic and international odds</li>
+    <li>Babu88:Simple, beginner-friendly interface for fast bets</li>
+  </ol>
+</section>
+<section class="bg-background text-primary-foreground p-0">
+  <h2 class="wp-block-heading m-0 text-[32px] leading-[42px] font-normal">1xBet: Top Betting Site in Bangladesh</h2>
+</section>
+<section class="h-[530px] overflow-hidden bg-background text-primary-foreground">
+  <div class="flex h-full items-start gap-8">
+    <div class="w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/1xbet_3-1-607x1024.webp" alt="1xbet best betting site Bangladesh" sizes="(max-width: 607px) 100vw, 607px" class="h-[506px] w-[300px] object-cover object-top">
+      </figure>
+    </div>
+    <div class="w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/1xbet_2-607x1024.webp" alt="1xbet top 1 betting site bangladesh" sizes="(max-width: 607px) 100vw, 607px" class="h-[506px] w-[300px] object-cover object-top">
+      </figure>
+    </div>
+    <div class="w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/1xbet_1-607x1024.webp" alt="Bonus 1xbet bangladesh" sizes="(max-width: 607px) 100vw, 607px" class="h-[506px] w-[300px] object-cover object-top">
+      </figure>
+    </div>
+    <div class="w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/1xbet_4-607x1024.webp" alt="promocode 1xbet bangladesh" sizes="(max-width: 607px) 100vw, 607px" class="h-[506px] w-[300px] object-cover object-top">
+      </figure>
+    </div>
+  </div>
+</section>
+<section class="w-[1120px] bg-background p-0 text-primary-foreground">
+  <table class="w-full table-fixed border-collapse text-left text-base">
+    <thead>
+      <tr class="border-b-[3px] border-border">
+        <th class="w-1/2 px-2 py-2 text-left font-normal">Key Information</th>
+        <th class="w-1/2 px-2 py-2 text-left font-normal">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="bg-muted">
+        <td class="px-2 py-2 text-left">Official Website</td>
+        <td class="px-2 py-2 text-left">1xbet.com</td>
+      </tr>
+      <tr>
+        <td class="px-2 py-2 text-left">Year Established</td>
+        <td class="px-2 py-2 text-left">2007</td>
+      </tr>
+      <tr class="bg-muted">
+        <td class="px-2 py-2 text-left">License</td>
+        <td class="px-2 py-2 text-left">Curacao eGaming License</td>
+      </tr>
+      <tr>
+        <td class="px-2 py-2 text-left">Betting Type</td>
+        <td class="px-2 py-2 text-left">Online</td>
+      </tr>
+      <tr class="bg-muted">
+        <td class="px-2 py-2 text-left">Contact</td>
+        <td class="px-2 py-2 text-left">Live chat and email support</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p>1xBet is one of the most reliable betting sites for Bangladeshi players. It handles high volume IPL and BPL live bets without slowing down, so you can place bets even during the busiest cricket matches.</p>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p>Deposits and withdrawals are fast, and it supports local payment methods like bKash, Rocket, and Nagad, making it easy to add funds or cash out winnings. The platform works well on both desktop and mobile, with no crashes or lag during live streaming.</p>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="m-0 text-base leading-7">Cricket coverage is excellent, with all major Bangladesh leagues and international matches included. Odds are the highest, and live betting is smooth. There are also daily promotions and bonuses for new and active users.</p>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <p>Whether you want to bet on cricket, football, or eSports, 1xBet is simple to use, reliable, and built for both beginners and experienced bettors in Bangladesh.</p>
+</section>
+<section class="mx-auto grid h-[188px] w-full max-w-[1120px] grid-cols-2 gap-4 bg-background text-primary-foreground">
+  <div class="grid grid-rows-[45px_143px]">
+    <div class="flex items-center justify-center bg-primary">
+      <p class="text-base leading-5">Pros</p>
+    </div>
+    <div class="bg-muted px-5 pt-2">
+      <p class="text-base leading-[30px]">Zero lag live cricket</p>
+      <p class="text-base leading-[30px]">Fast bKash/Nagad payouts</p>
+      <p class="text-base leading-[30px]">Huge in‑play markets</p>
+      <p class="text-base leading-[30px]">Multiple Asian handicaps</p>
+      <p class="text-base leading-[30px]"></p>
+    </div>
+  </div>
+  <div class="grid grid-rows-[45px_143px]">
+    <div class="flex items-center justify-center bg-destructive">
+      <p class="text-base leading-5">Cons</p>
+    </div>
+    <div class="bg-card px-5 pt-2">
+      <p class="text-base leading-[30px]">Confusing menu layout</p>
+      <p class="text-base leading-[30px]">Verification can delay cashouts</p>
+      <p class="text-base leading-[30px]">Live chat response slow</p>
+    </div>
+  </div>
+</section>
+<section class="bg-background px-0 py-0 text-primary-foreground">
+  <h2 class="wp-block-heading text-[32px] leading-[42px] font-normal">Melbet: Best Bangladesh Premier League Odds</h2>
+</section>
+<section class="flex h-[530px] w-full overflow-hidden bg-background text-primary-foreground">
+  <div class="flex shrink-0 gap-8">
+    <div class="w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/melbet_4-607x1024.webp" alt="Melbet top betting site bangladesh" class="block h-[506px] w-[300px] object-cover object-top" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/melbet_3-607x1024.webp" alt="Cricket best betting bangladesh" class="block h-[506px] w-[300px] object-cover object-top" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/melbet_1-607x1024.webp" alt="Mebet bangladesh" class="block h-[506px] w-[300px] object-cover object-top" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/melbet_2-607x1024.webp" alt="top bonus melbet bangladesh" class="block h-[506px] w-[300px] object-cover object-top" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+  </div>
+</section>
+<section class="w-full bg-background p-0 text-primary-foreground">
+  <table class="w-full table-fixed border-collapse text-left text-base leading-6">
+    <thead>
+      <tr class="border-b-[3px] border-border">
+        <th class="w-1/2 px-2 py-2 font-normal">Key Information</th>
+        <th class="w-1/2 px-2 py-2 font-normal">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="bg-muted">
+        <td class="px-2 py-2">Official Website</td>
+        <td class="px-2 py-2">melbet.com</td>
+      </tr>
+      <tr>
+        <td class="px-2 py-2">Year Established</td>
+        <td class="px-2 py-2">2012</td>
+      </tr>
+      <tr class="bg-muted">
+        <td class="px-2 py-2">License</td>
+        <td class="px-2 py-2">Curacao eGaming License</td>
+      </tr>
+      <tr>
+        <td class="px-2 py-2">Betting Type</td>
+        <td class="px-2 py-2">Online</td>
+      </tr>
+      <tr class="bg-muted">
+        <td class="px-2 py-2">Contact</td>
+        <td class="px-2 py-2">Live chat &amp; email support</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="w-full bg-background py-0 text-primary-foreground">
+  <p class="m-0 w-full text-base leading-6"><a href="https://mediafoot.net/bd/betting-sites/melbet/" data-type="link" data-id="https://mediafoot.net/bd/betting-sites/melbet/" class="text-foreground">Melbet</a>is offering the highest odds on BPL matches, making it the go-to platform for serious cricket bettors. Its markets are deep, with over 2,000 betting options per match for cricket and other sports. The platform’s live betting is fast and responsive, bettors can place in-play bets without delays, a crucial factor during tightly contested matches.</p>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="m-0 text-base leading-6">User experience is perfect on both mobile and desktop, and local payment methods like bKash and Rocket are fully supported, enabling instant deposits and quick withdrawals. Promotions and a clear welcome bonus as 1xbet provide additional value, interface remains very intuitive.</p>
+</section>
+<section class="grid h-[178px] grid-cols-2 gap-4 bg-background text-primary-foreground">
+  <div class="overflow-hidden">
+    <div class="flex h-11 items-center justify-center bg-primary">
+      <p>Pros</p>
+    </div>
+    <div class="h-28 overflow-hidden bg-primary/10 px-5 py-2">
+      <p class="leading-7">Quick match updates</p>
+      <p class="leading-7">Strong customer service</p>
+      <p class="leading-7">Highest BPL odds</p>
+      <p class="leading-7"></p>
+      <p class="leading-7"></p>
+    </div>
+  </div>
+  <div class="overflow-hidden">
+    <div class="flex h-11 items-center justify-center bg-destructive">
+      <p>Cons</p>
+    </div>
+    <div class="h-28 overflow-hidden bg-destructive/10 px-5 py-2">
+      <p class="leading-7">Bonus restrictions</p>
+      <p class="leading-7">Large payout verification</p>
+      <p class="leading-7">Complex interface for beginners</p>
+    </div>
+  </div>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h3 class="wp-block-heading text-2xl font-bold leading-[35px]">Linebet: Instant Welcome Bonus for a Quick Betting Start</h3>
+</section>
+<section class="h-[530px] overflow-hidden bg-background text-primary-foreground">
+  <div class="flex h-full items-start gap-[31px]">
+    <div class="w-[300px] max-w-[300px] shrink-0 text-center">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/linebet_4-1-607x1024.webp" alt="betting banglasdeh with linebet" class="block h-auto w-[300px] max-w-full">
+      </figure>
+    </div>
+    <div class="w-[300px] max-w-[300px] shrink-0 text-center">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/linebet_2-607x1024.webp" alt="Bangladesh best betting site" class="block h-auto w-[300px] max-w-full">
+      </figure>
+    </div>
+    <div class="w-[300px] max-w-[300px] shrink-0 text-center">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/linebet_3-607x1024.webp" alt="bonus linebet bangaldesh" class="block h-auto w-[300px] max-w-full">
+      </figure>
+    </div>
+    <div class="w-[300px] max-w-[300px] shrink-0 text-center">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/linebet_1-607x1024.webp" alt="top 3 betting site linebet" class="block h-auto w-[300px] max-w-full">
+      </figure>
+    </div>
+  </div>
+</section>
+<section class="w-full h-[308px] bg-background text-primary-foreground">
+  <table class="h-full w-full table-fixed border-collapse text-left text-base">
+    <thead>
+      <tr class="h-[46px] border-b-[3px] border-primary-foreground">
+        <th class="w-1/2 px-2 text-left align-middle font-normal">Key Information</th>
+        <th class="w-1/2 px-2 text-left align-middle font-normal">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 text-left align-middle">Official Website</td>
+        <td class="px-2 text-left align-middle">linebet.com</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 text-left align-middle">Year Established</td>
+        <td class="px-2 text-left align-middle">2019</td>
+      </tr>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 text-left align-middle">License</td>
+        <td class="px-2 text-left align-middle">Curaçao eGaming License (OGL/2024/565/0553)</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 text-left align-middle">Betting Type</td>
+        <td class="px-2 text-left align-middle">Online Sportsbook, Live Betting &amp; Casino</td>
+      </tr>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 text-left align-middle">Minimum Deposit</td>
+        <td class="px-2 text-left align-middle">Around ৳100–৳150</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 text-left align-middle">Withdrawal Time</td>
+        <td class="px-2 text-left align-middle">Often within 15 minutes depending on method</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="m-0 text-[16px] leading-[25px]">
+    <a href="https://mediafoot.net/bd/betting-sites/linebet/" data-type="link" data-id="https://mediafoot.net/bd/betting-sites/linebet/" class="text-foreground">Linebet is a popular sportsbook</a>among Bangladeshi bettors mainly because its welcome bonus is credited instantly after the first deposit, allowing players to start betting without delays. This is particularly useful during live cricket matches when users want to place bets quickly.
+  </p>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="m-0 text-[16px] leading-[26px]">For example, a bettor depositing ৳2,000 before a Bangladesh Premier League match such as Rangpur Riders vs Chattogram Challengers can receive the bonus immediately and place bets on markets like match winner, total runs over 160.5, or top batsman. The platform also supports local payment methods such as bKash, Nagad, and Rocket, making deposits and withdrawals convenient for players in Bangladesh.</p>
+</section>
+<section class="grid h-[157px] grid-cols-2 gap-5 bg-background text-primary-foreground">
+  <div>
+    <div class="flex h-11 items-center justify-center bg-primary text-primary-foreground">
+      <p>Pros</p>
+    </div>
+    <div class="h-[113px] bg-muted px-5 pt-2 text-primary-foreground">
+      <p class="leading-[30px]">Instant welcome bonus after first deposit</p>
+      <p class="leading-[30px]">Low entry deposit</p>
+      <p class="leading-[30px]">Markets like session bets and player props</p>
+      <p></p>
+      <p></p>
+    </div>
+  </div>
+  <div>
+    <div class="flex h-11 items-center justify-center bg-destructive text-destructive-foreground">
+      <p>Cons</p>
+    </div>
+    <div class="h-[81px] bg-card px-5 pt-2 text-primary-foreground">
+      <p class="leading-[30px]">Bonus requires accumulator bets with minimum odds</p>
+      <p class="leading-[30px]">Withdrawal must usually use the same method as the deposit</p>
+    </div>
+  </div>
+</section>
+<section class="bg-background text-primary-foreground p-0">
+  <h2 class="wp-block-heading m-0 text-[32px] leading-[42px] font-normal">Mostbet: Mobile Interface Stays Stable During Live Cricket</h2>
+</section>
+<section class="bg-background text-primary-foreground overflow-hidden">
+  <div class="flex gap-8">
+    <div class="w-75 shrink-0">
+      <figure class="w-full">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/mostbet_4-607x1024.webp" alt="betting site bangladesh mostbet" class="block h-auto w-full" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="w-75 shrink-0">
+      <figure class="w-full">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/mostbet_2-607x1024.webp" alt="cricket site bangladesh mostbet" class="block h-auto w-full" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="w-75 shrink-0">
+      <figure class="w-full">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/mostbet_3-607x1024.webp" alt=" bangladesh mostbet" class="block h-auto w-full" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="w-75 shrink-0">
+      <figure class="w-full">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/mostbet_1-607x1024.webp" alt="bonus bangladesh mostbet" class="block h-auto w-full" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+  </div>
+</section>
+<section class="w-full bg-background text-primary-foreground">
+  <table class="w-full table-fixed border-collapse text-left text-base">
+    <thead>
+      <tr class="h-11 border-b-[3px] border-primary-foreground">
+        <th class="px-2 py-3 text-left font-normal">Key Information</th>
+        <th class="px-2 py-3 text-left font-normal">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 py-3 text-left">Official Website</td>
+        <td class="px-2 py-3 text-left">mostbet.com</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 py-3 text-left">Year Established</td>
+        <td class="px-2 py-3 text-left">2009</td>
+      </tr>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 py-3 text-left">License</td>
+        <td class="px-2 py-3 text-left">Curaçao eGaming License</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 py-3 text-left">Betting Type</td>
+        <td class="px-2 py-3 text-left">Online Sportsbook, Live Betting &amp; Casino</td>
+      </tr>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 py-3 text-left">Minimum Deposit</td>
+        <td class="px-2 py-3 text-left">Around ৳100–৳150</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 py-3 text-left">Withdrawal Time</td>
+        <td class="px-2 py-3 text-left">Often within 15 minutes depending on method</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p>Mostbet is particularly popular among Bangladeshi bettors because its mobile interface remains stable during live cricket betting, even during high-traffic matches. The platform’s lightweight mobile site and app allow users to place bets, refresh odds, and switch markets without lag.</p>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0"><p class="m-0 text-base leading-6">For example, during an IPL match like Chennai Super Kings vs Mumbai Indians, a bettor following the game on their phone can quickly move between markets such as next over runs, match winner, or top batsman without the page freezing or reloading slowly. This stability is especially valuable when betting on live session markets, where odds change within seconds after every ball.</p></section>
+<section class="mx-auto grid h-[188px] w-full max-w-[1120px] grid-cols-2 gap-[18px] bg-background text-primary-foreground">
+  <div>
+    <div class="flex h-[45px] items-center justify-center bg-primary text-primary-foreground">
+      <p>Pros</p>
+    </div>
+    <div class="bg-muted px-5 py-2 text-primary-foreground">
+      <p class="leading-[30px]">Mobile interface stays responsive during high-traffic matches</p>
+      <p class="leading-[30px]">Smooth switching between live betting markets</p>
+      <p class="leading-[30px]">Markets like session bets and player props</p>
+      <p class="leading-[30px]">Fast in-play odds updates</p>
+      <p></p>
+    </div>
+  </div>
+  <div>
+    <div class="flex h-[45px] items-center justify-center bg-destructive text-primary-foreground">
+      <p>Cons</p>
+    </div>
+    <div class="bg-card px-5 py-2 text-primary-foreground">
+      <p class="leading-[30px]">Live interface shows many markets at once</p>
+      <p class="leading-[30px]">Some advanced betting tools are easier to use on desktop than mobile</p>
+    </div>
+  </div>
+</section>
+<section class="bg-background text-primary-foreground">
+  <h2 class="wp-block-heading text-[32px] leading-[42px] font-normal">Jeetbuzz: Supports bKash, Rocket, and Nagad Reliably</h2>
+</section>
+<section class="h-[530px] overflow-hidden bg-background text-primary-foreground">
+  <div class="flex h-full w-max flex-row gap-8 text-center">
+    <div class="w-[300px] max-w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/jeetbuzz_4-607x1024.webp" alt="jeetbuzz betting cricket bangladesh" class="block h-auto w-[300px] max-w-full" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="w-[300px] max-w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/jeetbuzz_3-607x1024.webp" alt="jeetbuzz betting cricket " class="block h-auto w-[300px] max-w-full" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="w-[300px] max-w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/jeetbuzz_2-607x1024.webp" alt="bangladesh best betting site" class="block h-auto w-[300px] max-w-full" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="w-[300px] max-w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/jeetbuzz_4-1-607x1024.webp" alt="bangladesh bonus jeetbuzz" class="block h-auto w-[300px] max-w-full" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+  </div>
+</section>
+<section class="w-full h-[308px] bg-background text-primary-foreground">
+  <table class="h-full w-full table-fixed border-collapse text-base">
+    <colgroup>
+      <col class="w-1/2">
+      <col class="w-1/2">
+    </colgroup>
+    <thead>
+      <tr class="h-11 border-b-[3px] border-primary-foreground">
+        <th class="px-2 text-left align-middle font-normal">Key Information</th>
+        <th class="px-2 text-left align-middle font-normal">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 text-left align-middle">Official Website</td>
+        <td class="px-2 text-left align-middle">jeetbuzz.com</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 text-left align-middle">Year Established</td>
+        <td class="px-2 text-left align-middle">2020</td>
+      </tr>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 text-left align-middle">License</td>
+        <td class="px-2 text-left align-middle">Anjouan Gaming License</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 text-left align-middle">Betting Type</td>
+        <td class="px-2 text-left align-middle">Online Sportsbook &amp; Casino</td>
+      </tr>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 text-left align-middle">Minimum Deposit</td>
+        <td class="px-2 text-left align-middle">Around ৳500</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 text-left align-middle">Withdrawal Time</td>
+        <td class="px-2 text-left align-middle">Usually 15 minutes – 1 hour</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="bg-background px-0 py-0 text-primary-foreground">
+  <p class="m-0 text-base leading-6">Jeetbuzz is widely used in Bangladesh because it supports the country’s most common mobile payment services bKash, Nagad, and Rocket reliably for both deposits and withdrawals. These wallets are integrated directly into the cashier, allowing players to fund their account using the same apps they use for everyday payments.</p>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p class="m-0 text-base leading-6">For example, a bettor who wants to place a last-minute bet on a BPL match like Comilla Victorians vs Fortune Barishal can deposit ৳1,000 through bKash instantly, place the bet immediately, and later withdraw winnings to the same wallet. Minimum transactions usually start around ৳500, with withdrawals often processed within minutes to an hour, depending on verification</p>
+</section>
+<section class="grid h-[188px] grid-cols-2 gap-4 bg-background text-primary-foreground">
+  <div class="flex flex-col">
+    <div class="flex h-11 items-center justify-center bg-primary text-primary-foreground">
+      <p>Pros</p>
+    </div>
+    <div class="flex-1 bg-primary/10 px-5 pt-2 text-base leading-[31px]">
+      <p>Super‑Fast Mobile Wallet Transactions</p>
+      <p>Same Wallet In &amp; Out Reduces Mistakes</p>
+      <p>Low Minimums Keep It Casual‑Friendly</p>
+      <p>Familiar UI &amp; One‑Tap Payment Flow</p>
+      <p></p>
+    </div>
+  </div>
+  <div class="flex flex-col">
+    <div class="flex h-11 items-center justify-center bg-destructive text-primary-foreground">
+      <p>Cons</p>
+    </div>
+    <div class="bg-destructive/10 px-5 pt-2 text-base leading-[31px]">
+      <p>Verification Can Stall First Withdrawals</p>
+      <p>App &amp; Network Hiccups Interrupt Flow</p>
+    </div>
+  </div>
+</section>
+<section class="bg-background p-0 text-primary-foreground"><h2 class="wp-block-heading m-0 text-3xl leading-10 font-normal">BC.Game: Lightning‑Fast Crypto Withdrawals for Bettors</h2></section>
+<section class="flex h-[530px] w-full overflow-hidden bg-background text-primary-foreground">
+  <div class="flex w-75 shrink-0 justify-center">
+    <figure class="w-75">
+      <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/bcgame_4-607x1024.webp" alt="bc game best crypto betting site in bangladesh" class="h-auto w-full">
+    </figure>
+  </div>
+  <div class="ml-8 flex w-75 shrink-0 justify-center">
+    <figure class="w-75">
+      <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/bcgame_3-607x1024.webp" alt="bc game cricket bangladesh" class="h-auto w-full">
+    </figure>
+  </div>
+  <div class="ml-8 flex w-75 shrink-0 justify-center">
+    <figure class="w-75">
+      <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/bcgame_2-607x1024.webp" alt="crypto betting bangladesh" class="h-auto w-full">
+    </figure>
+  </div>
+  <div class="ml-8 flex w-75 shrink-0 justify-center">
+    <figure class="w-75">
+      <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/bcgame_1-607x1024.webp" alt="bonus bcgame bangladesh" class="h-auto w-full">
+    </figure>
+  </div>
+</section>
+<section class="w-full bg-background p-0 text-primary-foreground">
+  <table class="w-full table-fixed border-collapse text-base leading-6">
+    <thead>
+      <tr class="h-11 border-b-4 border-primary-foreground">
+        <th class="w-1/2 px-2 text-left font-normal">Key Information</th>
+        <th class="w-1/2 px-2 text-left font-normal">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 text-left">Official Website</td>
+        <td class="px-2 text-left">bc.game</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 text-left">Established</td>
+        <td class="px-2 text-left">Mid‑2010s</td>
+      </tr>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 text-left">License</td>
+        <td class="px-2 text-left">Anjouan Gaming License</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 text-left">Betting Type</td>
+        <td class="px-2 text-left">Crypto‑focused sportsbook &amp; casino</td>
+      </tr>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 text-left">Minimum Withdrawal</td>
+        <td class="px-2 text-left">Varies by coin (e.g., ~0.00025 BTC / 10 USDT)</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 text-left">Withdrawal Time</td>
+        <td class="px-2 text-left">Typically 5–30 min for crypto</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="m-0 text-base leading-6">BC.Game allows users to withdraw cryptocurrency directly to their personal wallets. A user betting on a live esports match or casino game can request a withdrawal of 0.01 BTC and typically see it in their wallet within 15–20 minutes, depending on Bitcoin network congestion. Coins like USDT on TRON or Litecoin are confirmed in under 5 minutes.</p>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p class="m-0 text-base leading-6">The withdrawal screen shows the blockchain transaction hash, allowing users to track the payment independently. Small withdrawals generally process without KYC verification, while larger amounts trigger ID checks that can take 15–60 minutes. Users can choose the coin based on speed and fees, with lightweight chains providing faster access to funds. The platform charges no extra fees beyond the standard blockchain network cost.</p>
+</section>
+<section class="grid h-[188px] grid-cols-2 gap-4 bg-background text-primary-foreground">
+  <div class="overflow-hidden">
+    <div class="flex h-11 items-center justify-center bg-primary text-primary-foreground">
+      <p>Pros</p>
+    </div>
+    <div class="h-36 bg-muted px-5 pt-2 text-primary-foreground">
+      <p class="h-[30px] leading-[30px]">Crypto Withdrawals – BTC, ETH, and TRON USDT</p>
+      <p class="h-[30px] leading-[30px]">Blockchain Transparency</p>
+      <p class="h-[30px] leading-[30px]">Flexible Withdrawal Amounts</p>
+      <p class="h-[30px] leading-[30px]">Coin-Specific Speed</p>
+      <p></p>
+    </div>
+  </div>
+  <div>
+    <div class="flex h-11 items-center justify-center bg-destructive text-primary-foreground">
+      <p>Cons</p>
+    </div>
+    <div class="h-20 bg-card px-5 pt-2 text-primary-foreground">
+      <p class="h-[30px] leading-[30px]">KYC for Large Withdrawals</p>
+      <p class="h-[30px] leading-[30px]">Offshore License</p>
+    </div>
+  </div>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h2 class="wp-block-heading text-[32px] leading-[42px] font-normal">Betvisa: Instant Payouts, Even on Small Cricket Bets</h2>
+</section>
+<section class="w-full bg-background text-primary-foreground">
+  <table class="w-full table-fixed border-collapse text-base leading-6">
+    <thead>
+      <tr class="h-11 border-b-4 border-primary-foreground">
+        <th class="w-1/2 px-2 text-left align-middle font-normal">Key Information</th>
+        <th class="w-1/2 px-2 text-left align-middle font-normal">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 text-left align-middle">Official Website</td>
+        <td class="px-2 text-left align-middle">betvisa.com</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 text-left align-middle">Established</td>
+        <td class="px-2 text-left align-middle">2019</td>
+      </tr>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 text-left align-middle">License</td>
+        <td class="px-2 text-left align-middle">Curacao eGaming License</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 text-left align-middle">Betting Type</td>
+        <td class="px-2 text-left align-middle">Online sportsbook &amp; casino</td>
+      </tr>
+      <tr class="h-11 bg-muted">
+        <td class="px-2 text-left align-middle">Minimum Deposit</td>
+        <td class="px-2 text-left align-middle">Around $1 / ৳100 equivalent</td>
+      </tr>
+      <tr class="h-11">
+        <td class="px-2 text-left align-middle">Withdrawal Time</td>
+        <td class="px-2 text-left align-middle">Often under 10 minutes for small bets; up to 1 hour for larger amounts</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p class="m-0 text-[16px] leading-[26px]">Betvisa allows users to deposit and withdraw funds quickly, including for small cricket bets. A bettor placing a last-minute wager on a Bangladesh Premier League match can fund the account with as little as ৳100 and request a payout immediately after winning. Small withdrawals are typically processed within 5–10 minutes, while larger amounts may take up to an hour, depending on verification requirements.</p>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p class="text-base leading-6">The platform supports multiple local and international payment methods, including mobile wallets and crypto, which are integrated directly into the cashier for seamless transfers. The system tracks transaction status in real-time, and users can see pending and completed withdrawals clearly. Verification is only required for larger payouts, making casual betting convenient. The platform does not charge extra fees for processing, and network confirmations are usually instant for supported wallets.</p>
+</section>
+<section class="h-32 w-full bg-background text-primary-foreground">
+  <div class="grid h-full grid-cols-2 gap-4">
+    <div class="grid grid-rows-[44px_1fr]">
+      <div class="flex items-center justify-center bg-primary">
+        <p>Pros</p>
+      </div>
+      <div class="bg-muted px-5 pt-2">
+        <p class="leading-6">Low Minimum Deposit (~৳100)</p>
+        <p class="leading-6">Transparent Transaction Tracking</p>
+        <p class="leading-6"></p>
+      </div>
+    </div>
+    <div class="grid grid-rows-[44px_1fr]">
+      <div class="flex items-center justify-center bg-secondary">
+        <p>Cons</p>
+      </div>
+      <div class="bg-card px-5 pt-2">
+        <p class="leading-6">Dependent on Wallet/Network Speed</p>
+        <p class="leading-6">Offshore License</p>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="w-full bg-background py-0 text-primary-foreground">
+  <h2 class="m-0 text-[34px] leading-[42px] font-normal">Krikya: Cricket-Only Platform with Accurate Domestic and International Odds</h2>
+</section>
+<section class="gb-element-1f961ef1 flex h-[530px] gap-8 overflow-hidden bg-background p-0 text-center text-primary-foreground">
+  <div class="gb-element-66efcffc w-[300px] shrink-0">
+    <figure class="wp-block-image size-large m-0">
+      <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/krikya_4-607x1024.webp" alt="Krikya betting site bangladesh" class="wp-image-76 h-auto w-[300px]" sizes="(max-width: 607px) 100vw, 607px">
+    </figure>
+  </div>
+  <div class="gb-element-1b3e793e w-[300px] shrink-0">
+    <figure class="wp-block-image size-large m-0">
+      <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/krikya_3-607x1024.webp" alt="cricket betting website Krikya" class="wp-image-77 h-auto w-[300px]" sizes="(max-width: 607px) 100vw, 607px">
+    </figure>
+  </div>
+  <div class="gb-element-dc02c7ae w-[300px] shrink-0">
+    <figure class="wp-block-image size-large m-0">
+      <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/krikya_2-607x1024.webp" alt="Krikya bonus bangladesh" class="wp-image-78 h-auto w-[300px]" sizes="(max-width: 607px) 100vw, 607px">
+    </figure>
+  </div>
+  <div class="gb-element-4b1d76f9 w-[300px] shrink-0">
+    <figure class="wp-block-image size-large m-0">
+      <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/krikya_1-607x1024.webp" alt="bangladesh Krikya" class="wp-image-79 h-auto w-[300px]" sizes="(max-width: 607px) 100vw, 607px">
+    </figure>
+  </div>
+</section>
+<section class="w-full bg-background p-0 text-primary-foreground">
+  <table class="w-full table-fixed border-collapse text-left text-base leading-5">
+    <colgroup>
+      <col class="w-[51%]">
+      <col>
+    </colgroup>
+    <thead>
+      <tr class="border-b-4 border-primary-foreground">
+        <th class="px-2 py-3 text-left font-normal">Key Information</th>
+        <th class="px-2 py-3 text-left font-normal">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="bg-muted">
+        <td class="px-2 py-3 text-left">Official Website</td>
+        <td class="px-2 py-3 text-left">krikya.com</td>
+      </tr>
+      <tr>
+        <td class="px-2 py-3 text-left">Established</td>
+        <td class="px-2 py-3 text-left">2021</td>
+      </tr>
+      <tr class="bg-muted">
+        <td class="px-2 py-3 text-left">License</td>
+        <td class="px-2 py-3 text-left">Curacao eGaming License</td>
+      </tr>
+      <tr>
+        <td class="px-2 py-3 text-left">Betting Type</td>
+        <td class="px-2 py-3 text-left">Cricket-focused sportsbook</td>
+      </tr>
+      <tr class="bg-muted">
+        <td class="px-2 py-3 text-left">Minimum Deposit</td>
+        <td class="px-2 py-3 text-left">Around $1 / ৳100 equivalent</td>
+      </tr>
+      <tr>
+        <td class="px-2 py-3 text-left">Withdrawal Time</td>
+        <td class="px-2 py-3 text-left">Typically 10–30 minutes, depending on amount and verification</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="m-0 text-base leading-6">
+    Krikya is a cricket betting platform that has accurate odds for domestic leagues like the Bangladesh Premier League and international tournaments such as the ICC Cricket World Cup. Odds are updated in near real-time, allowing users to place live bets on runs, wickets, and over-by-over outcomes. Users depositing through local wallets or crypto can fund accounts instantly and see their balances reflected immediately in the betting interface.
+  </p>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p class="m-0 text-[16px] leading-[25px] font-normal">Withdrawal requests for small winnings, such as single-match or over/under bets, are usually processed within 10 15 minutes, while larger payouts may take up to 30 minutes due to KYC verification. The platform displays detailed bet histories, including real time match stats and live market changes, enabling bettors to make informed decisions. Its mobile-friendly design allows seamless live betting without switching between apps, and the focus on cricket-specific markets ensures more depth than general sportsbooks.</p>
+</section>
+<section class="w-full max-w-[1120px] bg-background text-primary-foreground">
+  <div class="grid h-[208px] grid-cols-2 gap-[18px]">
+    <div class="flex h-full flex-col">
+      <div class="flex h-[45px] items-center justify-center bg-accent text-accent-foreground">
+        <p class="text-accent-foreground">Pros</p>
+      </div>
+      <div class="h-[163px] bg-muted px-5 py-2 text-muted-foreground">
+        <p class="leading-[30px] text-foreground">Betting Exchange Option</p>
+        <p class="leading-[30px] text-foreground">Integrated Live Stats and Analytics</p>
+        <p class="leading-[30px] text-foreground">Granular Cricket Markets</p>
+        <p class="leading-[30px] text-foreground">Rapid Small-Win Withdrawals</p>
+      </div>
+    </div>
+    <div class="flex flex-col">
+      <div class="flex h-[45px] items-center justify-center bg-primary text-primary-foreground">
+        <p>Cons</p>
+      </div>
+      <div class="h-[80px] bg-card px-5 py-2 text-muted-foreground">
+        <p class="leading-[30px] text-card-foreground">Limited to Cricket</p>
+        <p class="leading-[30px] text-card-foreground">Rapid odds changes on micro-markets</p>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h2 class="wp-block-heading text-[32px] leading-[42px] font-normal">Paripesa: Promotions Tied to Cricket Leagues</h2>
+</section>
+<section class="h-[530px] overflow-hidden bg-background text-primary-foreground">
+  <div class="flex h-full items-start gap-8">
+    <div class="shrink-0">
+      <figure class="w-75">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/paripesa_4-607x1024.webp" alt="paripesa best betting site bangladesh" class="block h-auto w-full" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="shrink-0">
+      <figure class="w-75">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/paripesa_3-607x1024.webp" alt="bangladesh paripesa" class="block h-auto w-full" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="shrink-0">
+      <figure class="w-75">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/paripesa_2-607x1024.webp" alt="bonus cricket bangladesh paripesa" class="block h-auto w-full" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="shrink-0">
+      <figure class="w-75">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/paripesa_1-607x1024.webp" alt="register paripesa bangladesh" class="block h-auto w-full" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+  </div>
+</section>
+<section class="w-[1120px] h-[308px] bg-background text-primary-foreground">
+  <table class="h-full w-full table-fixed border-collapse text-left text-base">
+    <thead class="border-b-[3px] border-primary-foreground">
+      <tr>
+        <th class="px-2 py-0 text-left font-normal">Key Information</th>
+        <th class="px-2 py-0 text-left font-normal">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="bg-muted">
+        <td class="px-2 py-0 text-left">Official Website</td>
+        <td class="px-2 py-0 text-left">paripesa.com</td>
+      </tr>
+      <tr>
+        <td class="px-2 py-0 text-left">Established</td>
+        <td class="px-2 py-0 text-left">2018</td>
+      </tr>
+      <tr class="bg-muted">
+        <td class="px-2 py-0 text-left">License</td>
+        <td class="px-2 py-0 text-left">Curacao eGaming</td>
+      </tr>
+      <tr>
+        <td class="px-2 py-0 text-left">Betting Type</td>
+        <td class="px-2 py-0 text-left">Sportsbook &amp; Casino</td>
+      </tr>
+      <tr class="bg-muted">
+        <td class="px-2 py-0 text-left">Minimum Deposit</td>
+        <td class="px-2 py-0 text-left">Around ৳300–৳500 equivalent</td>
+      </tr>
+      <tr>
+        <td class="px-2 py-0 text-left">Withdrawal Time</td>
+        <td class="px-2 py-0 text-left">Typically 10–60 minutes depending on method</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="bg-background text-primary-foreground p-0">
+  <p class="m-0 text-base leading-6">Paripesa integrates cricket‑specific promotional campaigns with major tournaments such as the Bangladesh Premier League (BPL), Indian Premier League (IPL), and ICC events, creating value that goes beyond standard odds. Instead of generic bonus popups, Paripesa runs tiered cashback, free bet challenges, and accumulator boosts tied directly to real match outcomes.</p>
+</section>
+<section class="bg-background text-primary-foreground w-full p-0">
+  <p class="m-0 text-base leading-[1.6]">For example, during a BPL match between Dhaka Dominators and Sylhet Strikers, users may receive a free bet refund if their accumulator loses by one leg, or run‑rate bonus cash if a selected team reaches a specific run threshold. These promotions are time‑limited and linked to league fixtures, encouraging engagement around key cricket windows.</p>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="m-0 text-base leading-6">Deposits through local wallets or crypto reflect instantly, and users can track active and upcoming promotions in a dedicated dashboard. Withdrawals for promotional winnings are typically processed within 10–30 minutes on smaller amounts, making it easy to recycle bonus funds into new cricket bets without long holds.</p>
+</section>
+<section class="grid h-52 w-full grid-cols-2 gap-4 bg-background text-primary-foreground">
+  <div class="flex h-full flex-col">
+    <div class="flex h-11 items-center justify-center bg-primary text-primary-foreground">
+      <p>Pros</p>
+    </div>
+    <div class="flex-1 bg-primary/15 px-5 py-2 text-base leading-8">
+      <p>Cashback &amp; Run‑rate Bonuses</p>
+      <p>Promo Tracking Dashboard</p>
+      <p>League Linked Promotions</p>
+      <p>Fast Wallet Integration</p>
+    </div>
+  </div>
+  <div class="flex h-full flex-col">
+    <div class="flex h-11 items-center justify-center bg-destructive text-destructive-foreground">
+      <p>Cons</p>
+    </div>
+    <div class="h-20 bg-destructive/15 px-5 py-2 text-base leading-8">
+      <p>Requirements that make harder to withdraw bonus</p>
+      <p>Limited Non Cricket Offers</p>
+    </div>
+  </div>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h2 class="wp-block-heading text-[32px] leading-[42px] font-normal">Babu88: Simple, Beginner‑Friendly Interface for Fast Bets</h2>
+</section>
+<section class="h-[530px] overflow-hidden bg-background text-primary-foreground">
+  <div class="flex h-full flex-row gap-8">
+    <div class="w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/babu88_4-607x1024.webp" alt="Babu88 bangladesh" class="block h-auto w-[300px]" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/babu88_3-607x1024.webp" alt="Bonus Babu88 bangladesh" class="block h-auto w-[300px]" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/babu88_2-607x1024.webp" alt="Cricket Babu88 bangladesh" class="block h-auto w-[300px]" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+    <div class="w-[300px] shrink-0">
+      <figure class="m-0">
+        <img width="607" height="1024" src="https://mediafoot.net/bd/wp-content/uploads/sites/3/2026/03/babu88_1-607x1024.webp" alt="Slot Babu88 bangladesh" class="block h-auto w-[300px]" sizes="(max-width: 607px) 100vw, 607px">
+      </figure>
+    </div>
+  </div>
+</section>
+<section class="mx-auto h-77 w-full max-w-280 bg-background p-0 text-primary-foreground">
+  <table class="h-full w-full table-fixed border-collapse text-left text-base">
+    <thead>
+      <tr class="border-b-4 border-primary-foreground">
+        <th class="px-2 py-0 text-left font-normal">Key Information</th>
+        <th class="px-2 py-0 text-left font-normal">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="bg-muted">
+        <td class="px-2 py-0 text-left">Official Website</td>
+        <td class="px-2 py-0 text-left">babu88.com</td>
+      </tr>
+      <tr>
+        <td class="px-2 py-0 text-left">Established</td>
+        <td class="px-2 py-0 text-left">2020</td>
+      </tr>
+      <tr class="bg-muted">
+        <td class="px-2 py-0 text-left">License</td>
+        <td class="px-2 py-0 text-left">Curacao eGaming</td>
+      </tr>
+      <tr>
+        <td class="px-2 py-0 text-left">Betting Type</td>
+        <td class="px-2 py-0 text-left">Sportsbook &amp; Casino</td>
+      </tr>
+      <tr class="bg-muted">
+        <td class="px-2 py-0 text-left">Minimum Deposit</td>
+        <td class="px-2 py-0 text-left">Around ৳300–৳500 equivalent</td>
+      </tr>
+      <tr>
+        <td class="px-2 py-0 text-left">Withdrawal Time</td>
+        <td class="px-2 py-0 text-left">Typically 10–45 minutes depending on method</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="m-0 text-base leading-[1.6]">Babu88 targets new and casual bettors by stripping away complex menus and deep analytics in favor of a clean, streamlined betting flow. The platform has immediate access to key markets especially cricket with a minimalist layout that places match selections, odds, and bet slip front and center. For example, a beginner wanting to bet on a BPL match doesn’t need to click through multi‑level menus; odds for match winner, totals (over/under), and player props are visible on the main feed and selectable with one or two taps.</p>
+</section>
+<section class="w-full bg-background text-primary-foreground">
+  <p class="text-base leading-6">The cashier is designed to accept local payment options like bKash, Nagad, and Rocket, and deposits are reflected instantly so users can bet without delay. Babu88 also highlights live betting markets clearly, with odds updates in real time and a simplified live odds ladder that removes clutter. Withdrawal requests for straight bets are typically approved within 15–30 minutes, with clear status indicators that inform users when funds have left the platform and hit their wallet.</p>
+</section>
+<section class="w-full max-w-[1120px] h-52 bg-background text-primary-foreground grid grid-cols-2 gap-4">
+  <div class="h-full">
+    <div class="h-11 flex items-center justify-center bg-chart-2/70">
+      <p>Pros</p>
+    </div>
+    <div class="h-41 bg-chart-2/15 px-5 py-2">
+      <p class="leading-[30px]">The main interface prioritises the most common markets</p>
+      <p class="leading-[30px]">One Tap Market Selection</p>
+      <p class="leading-[30px]">Immediate Fund Availability</p>
+      <p class="leading-[30px]">Fast Wallet Integration</p>
+    </div>
+  </div>
+  <div class="h-full">
+    <div class="h-11 flex items-center justify-center bg-chart-1/80">
+      <p>Cons</p>
+    </div>
+    <div class="h-20 bg-chart-1/15 px-5 py-2">
+      <p class="leading-[30px]">Simplified Markets Only</p>
+      <p class="leading-[30px]">Lack of detail frustrating for researching bets</p>
+    </div>
+  </div>
+</section>
+<section class="bg-background text-primary-foreground p-0">
+  <h2 class="wp-block-heading m-0 text-[32px] leading-[42px] font-normal">Methodology for Ranking the Best Betting Sites in Bangladesh</h2>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p>When analyzing operators and creating our ranking of Top 10 Betting Sites, we focus on objectivity and transparency. Our methodology is based on a systematic approach using measurable criteria that can be compared between platforms.</p>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <p class="text-base leading-6">Each site is evaluated on the same scale to reflect real user needs and experiences. We remove subjective preferences and use a structured scoring system to produce fair and reliable results.</p>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h3 class="wp-block-heading text-2xl font-bold leading-[35px]">Scope of the Ranking</h3>
+</section>
+<section class="bg-background text-primary-foreground">
+  <ul class="list-disc pl-5 text-sm leading-6">
+    <li>Only legally licensed international betting platforms accessible from Bangladesh are included.</li>
+    <li>Regular monthly checks ensure accuracy, and additional assessments are performed when bonus programs, rules, or apps change.</li>
+  </ul>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h3 class="wp-block-heading text-2xl font-semibold leading-[35px]">Sources of Data</h3>
+</section>
+<section class="bg-background text-primary-foreground">
+  <ul class="wp-block-list m-0 list-disc space-y-0 pl-0 text-base leading-6 marker:hidden">
+    <li>Official websites and terms of service.</li>
+    <li>Hands-on testing: registration, deposit/withdrawal, pre-match and live betting, mobile/desktop apps, and customer support.</li>
+    <li>Verified user feedback from Bangladeshi players.</li>
+    <li>For disputes, results are double-checked by our team.</li>
+  </ul>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h3 class="wp-block-heading text-3xl font-semibold leading-[35px]">Scoring Scale</h3>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h3 class="wp-block-heading text-2xl font-bold leading-[35px]">Key Criteria Explained</h3>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="text-base leading-6">Bonus Value – 12%:Evaluates whether the welcome offer is useful for new players and how easy it is to activate. Includes free bets, cashbacks, or deposit-based bonuses. Example: Melbet gets high scores for high-value BPL bonuses, while some smaller operators offer only minimal free bets.</p>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p class="text-sm leading-6">Bonus Program – 12%:Measures variety and frequency of ongoing promotions, loyalty programs, tournaments, and seasonal offers. Sites like<a href="https://mediafoot.net/bd/betting-sites/melbet/promo-code/" data-type="link" class="text-foreground">Melbet</a>and 1xBet provide multiple weekly or monthly promotions, keeping regular users engaged.</p>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p class="m-0 text-base leading-6">Wager Terms – 12%:Checks rollover requirements, approved betting markets, total turnover, and time allowed. Realistic conditions for the average player are preferred. Melbet’s x25 bonus in 5 days scores lower than 1xBet’s daily promotions.</p>
+</section>
+<section class="w-full bg-background text-primary-foreground"><p class="m-0 text-base leading-6">Minimum Deposit – 6%:Low deposit requirements make bonuses accessible. Platforms supporting bKash, Rocket, or Nagad with low thresholds score higher.</p></section>
+<section class="bg-background text-primary-foreground">
+  <p class="text-base leading-6">Media Activity – 8%:Includes brand visibility, sponsorships, influencer partnerships, and marketing campaigns. Active promotion increases trust among Bangladeshi players.</p>
+</section>
+<section class="bg-background text-primary-foreground w-full p-0">
+  <p class="m-0 text-base leading-[1.6]">Pre-match &amp; Live Lines – 18%:Evaluates the number of sports, betting markets, live odds speed, cash-out availability, and live streaming. 1xBet and Melbet are top performers due to fast updates during IPL/BPL matches.</p>
+</section>
+<section class="bg-background text-primary-foreground p-0">
+  <p>Innovation – 10%:Looks at unique features improving engagement: daily tasks, personalized offers, gamification, or special rewards. 1xBet and BC Game provide crypto features and in-app gamification; Melbet offers multi-market express boosts.</p>
+</section>
+<section class="bg-background text-primary-foreground p-0">
+  <p class="m-0 text-base leading-6">Customer Support – 8%:Measures available channels, response time, problem-solving efficiency, and ability to assist with local payment methods. Melbet, 1xBet, and Linebet are noted for responsive live chat and local-language support.</p>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h2 class="m-0 text-[32px] leading-[42px] font-normal">How to Choose the Best Betting Sites in 2026</h2>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h3 class="wp-block-heading text-xl font-semibold leading-9">1. Test the Mobile App</h3>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="m-0 text-base leading-6">For mobile bettors, the app’s performance is crucial. Odds should update quickly, and the app should be stable and user-friendly. A poor desktop experience can be frustrating, but a good mobile app can make betting smooth. Top-rated apps for Bangladesh include 1xBet, Melbet, and Linebet.</p>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h3 class="wp-block-heading text-2xl font-bold leading-[35px]">2. Compare Odds Across Sites</h3>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="m-0 text-base leading-6">Higher odds directly impact potential profits. Different bookmakers offer different odds for the same events, so check the markets you bet on most frequently. For example, Melbet often offers competitive Bangladesh Premier League odds, while 1xBet provides strong odds on live IPL/BPL matches.</p>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h3 class="wp-block-heading text-3xl font-bold leading-[35px]">3. Evaluate Welcome Bonuses</h3>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p>Good bookmakers reward new players with a variety of bonuses, from deposit matches to free bets without deposits. For beginners, a free bet or a small deposit bonus is often the safest and most practical way to start.</p>
+</section>
+<section class="bg-background text-primary-foreground py-0">
+  <h3 class="wp-block-heading text-2xl font-semibold leading-[35px]">4. Test Customer Support</h3>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p>Before registering, reach out to support with a few questions—like clarifying bonus conditions or deposit options. This helps assess how responsive and knowledgeable the team is. Reliable support is crucial in case you encounter real issues later.</p>
+</section>
+<section class="bg-background text-primary-foreground p-0">
+  <h2 class="wp-block-heading text-[32px] leading-[42px] font-normal">Online Betting Sites in Bangladesh by User Reviews</h2>
+</section>
+<section class="w-full bg-background text-primary-foreground">
+  <table class="w-full table-fixed border-collapse text-left text-base leading-6">
+    <thead>
+      <tr class="h-11 border-b-[3px] border-border">
+        <th class="w-[34%] px-2 py-2 text-left font-normal">Betting Site</th>
+        <th class="w-[33%] px-2 py-2 text-left font-normal">Rating</th>
+        <th class="w-[33%] px-2 py-2 text-left font-normal">Reviews</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="h-[44px] bg-muted">
+        <td class="px-2 py-2">1xBet</td>
+        <td class="px-2 py-2">1</td>
+        <td class="px-2 py-2">5,120</td>
+      </tr>
+      <tr class="h-[44px]">
+        <td class="px-2 py-2">Melbet</td>
+        <td class="px-2 py-2">2</td>
+        <td class="px-2 py-2">4,850</td>
+      </tr>
+      <tr class="h-[44px] bg-muted">
+        <td class="px-2 py-2">Linebet</td>
+        <td class="px-2 py-2">3</td>
+        <td class="px-2 py-2">4,300</td>
+      </tr>
+      <tr class="h-[44px]">
+        <td class="px-2 py-2">Mostbet</td>
+        <td class="px-2 py-2">4</td>
+        <td class="px-2 py-2">4,150</td>
+      </tr>
+      <tr class="h-[44px] bg-muted">
+        <td class="px-2 py-2">Jeetbuzz</td>
+        <td class="px-2 py-2">5</td>
+        <td class="px-2 py-2">3,900</td>
+      </tr>
+      <tr class="h-[44px]">
+        <td class="px-2 py-2">BC Game</td>
+        <td class="px-2 py-2">6</td>
+        <td class="px-2 py-2">3,600</td>
+      </tr>
+      <tr class="h-[44px] bg-muted">
+        <td class="px-2 py-2">Betvisa</td>
+        <td class="px-2 py-2">7</td>
+        <td class="px-2 py-2">3,400</td>
+      </tr>
+      <tr class="h-[44px]">
+        <td class="px-2 py-2">Krikya</td>
+        <td class="px-2 py-2">8</td>
+        <td class="px-2 py-2">3,100</td>
+      </tr>
+      <tr class="h-[44px] bg-muted">
+        <td class="px-2 py-2">Paripesa</td>
+        <td class="px-2 py-2">9</td>
+        <td class="px-2 py-2">2,900</td>
+      </tr>
+      <tr class="h-[44px]">
+        <td class="px-2 py-2">Babu88</td>
+        <td class="px-2 py-2">10</td>
+        <td class="px-2 py-2">2,600</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+<section class="bg-background text-primary-foreground h-[42px] w-full">
+  <h2 class="wp-block-heading text-[32px] leading-[42px] font-normal">Frequently Asked Questions</h2>
+</section>
+<section class="bg-background text-primary-foreground w-full">
+  <p class="m-0 text-base leading-6">1. What criteria define the best betting sites?<br>The top betting sites in Bangladesh are rated based on reliability, reputation, welcome bonuses, wagering requirements, range of betting options, live betting stability, and customer support quality.</p>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="m-0 text-base leading-6">2. Which betting sites are the most reliable in Bangladesh?<br>Currently, the most reliable platforms include 1xBet, Melbet, Linebet, Mostbet, Jeetbuzz, BC Game, Betvisa, Krikya, Paripesa, and Babu88, all supporting local players with secure payments and best betting experiences.</p>
+</section>
+<section class="bg-background text-primary-foreground w-full p-0">
+  <p class="m-0 text-base leading-6">3. Which are the oldest betting sites in Bangladesh?<br>Among the established platforms, 1xBet (2007) and Melbet (2012) have been operating for over a decade, earning trust through consistent service<br class="hidden xl:block"> and largest coverage of cricket and other sports.</p>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p>4. Are there illegal betting sites in Bangladesh?<br>Yes, unlicensed betting sites exist, but we strongly recommend using verified platforms like 1xBet, Melbet, or Jeetbuzz to avoid risks and ensure safe deposits and withdrawals.</p>
+</section>
+<section class="bg-background text-primary-foreground w-full">
+  <p class="m-0 text-base leading-6">5. Which betting site offers the biggest welcome bonus?<br>1xBet is known for it’s welcome bonuses for new users. Melbet and BC Game also offer competitive first deposit promotions, giving extra value to new players.</p>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="m-0 text-base leading-6">6. Where can I bet on eSports or other niche games?<br>Melbet provides boosted odds for eSports events, and BC Game focuses on crypto-based betting including niche competitions. 1xBet and Linebet also feature popular eSports markets for Bangladeshi players.</p>
+</section>
+<section class="bg-background text-primary-foreground w-full py-0">
+  <p class="m-0 text-base leading-6">8. Which sites provide live match streams?<br>1xBet, Mostbet, Melbet, and Paripesa offer live streams of cricket and other sports directly in their apps or websites, typically requiring a registered account with a positive balance.</p>
+</section>
+<section class="bg-background text-primary-foreground">
+  <p>9. Which betting sites have the best mobile apps?<br>1xBet, Mostbet, and Linebet are praised for stable, fast-loading mobile apps with smooth live betting. Jeetbuzz and Betvisa also provide functional apps supporting bKash, Rocket, and Nagad payments.</p>
+</section>
+<section class="h-[489px] bg-background text-primary-foreground">
+  <div class="mx-auto flex h-full max-w-[1080px] flex-col justify-between">
+    <div class="flex gap-24">
+      <div class="max-w-[420px]">
+        <img class="h-auto w-[180px]" alt="logofooter" src="https://mediafoot.net/wp-content/uploads/2025/09/logofoot.svg">
+        <p class="mt-6 text-lg font-semibold">About us</p>
+        <p class="mt-4 text-sm leading-6">Mediafoot specializes in football, IPL, statistics and live matches, we offer you the best sports betting sites in Bangladesh.</p>
+      </div>
+      <div>
+        <p class="text-lg font-semibold">Best betting sites</p>
+        <ul class="mt-4 list-disc pl-5">
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
+      </div>
+    </div>
+    <div class="flex items-center justify-between">
+      <p class="text-sm">Copyright © 2026 -<a href="https://mediafoot.net/mentions-legales/">Legal</a>-<a href="https://mediafoot.net/charte-editoriale/" target="_blank">About us</a>-<a href="https://mediafoot.net/contact/" target="_blank">Contact</a></p>
+      <div>
+        <a href="https://x.com/mediafootinside" target="_blank" aria-label="Sur X" class="inline-flex items-center justify-center">
+          <span class="inline-flex">
+            <iconify-icon icon="lucide:twitter" class="text-lg"></iconify-icon>
+          </span>
+        </a>
+      </div>
+    </div>
+    <p></p>
+  </div>
+</section>
+</div>
+</body></html>
